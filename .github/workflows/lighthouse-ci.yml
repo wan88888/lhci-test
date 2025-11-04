@@ -10,10 +10,16 @@ jobs:
   lhci:
     name: Run Lighthouse CI
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -27,5 +33,77 @@ jobs:
         env:
           LHCI_SERVER_BASE_URL: ${{ secrets.LHCI_SERVER_BASE_URL }}
           LHCI_TOKEN: ${{ secrets.LHCI_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          lhci autorun --config=lighthouserc.json --upload.target=lhci
+          lhci autorun --config=lighthouserc.json
+
+      - name: Send Feishu Notification
+        if: always()
+        run: |
+          # 获取 commit 信息
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          COMMIT_AUTHOR=$(git log -1 --pretty=%an)
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          
+          # 判断测试状态
+          if [ "${{ job.status }}" == "success" ]; then
+            STATUS_COLOR="green"
+            STATUS_TEXT="✅ 测试通过"
+          else
+            STATUS_COLOR="red"
+            STATUS_TEXT="❌ 测试失败"
+          fi
+          
+          # 构建飞书消息
+          curl -X POST ${{ secrets.FEISHU_WEBHOOK }} \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "msg_type": "interactive",
+              "card": {
+                "header": {
+                  "title": {
+                    "tag": "plain_text",
+                    "content": "🚀 Lighthouse CI 测试报告"
+                  },
+                  "template": "'"$STATUS_COLOR"'"
+                },
+                "elements": [
+                  {
+                    "tag": "div",
+                    "text": {
+                      "tag": "lark_md",
+                      "content": "**测试状态**: '"$STATUS_TEXT"'\n**分支**: '"$BRANCH_NAME"'\n**提交**: '"$COMMIT_HASH"'\n**作者**: '"$COMMIT_AUTHOR"'\n**提交信息**: '"$COMMIT_MSG"'"
+                    }
+                  },
+                  {
+                    "tag": "hr"
+                  },
+                  {
+                    "tag": "action",
+                    "actions": [
+                      {
+                        "tag": "button",
+                        "text": {
+                          "tag": "plain_text",
+                          "content": "📊 查看详细报告"
+                        },
+                        "type": "primary",
+                        "url": "https://lhci-server-production-1774.up.railway.app/app/projects/lhci-test/dashboard"
+                      },
+                      {
+                        "tag": "button",
+                        "text": {
+                          "tag": "plain_text",
+                          "content": "🔗 查看 Actions"
+                        },
+                        "type": "default",
+                        "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }'
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
