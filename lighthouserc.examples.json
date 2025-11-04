@@ -1,0 +1,242 @@
+{
+  "_comment": "这是一个配置示例文件，展示不同的 Lighthouse CI 配置场景",
+  
+  "示例1_桌面端基础配置": {
+    "ci": {
+      "collect": {
+        "url": ["https://example.com"],
+        "numberOfRuns": 3,
+        "settings": {
+          "preset": "desktop"
+        }
+      },
+      "assert": {
+        "preset": "lighthouse:recommended"
+      },
+      "upload": {
+        "target": "temporary-public-storage"
+      }
+    }
+  },
+
+  "示例2_移动端配置": {
+    "ci": {
+      "collect": {
+        "url": ["https://example.com"],
+        "numberOfRuns": 3,
+        "settings": {
+          "preset": "mobile",
+          "throttling": {
+            "rttMs": 150,
+            "throughputKbps": 1638,
+            "cpuSlowdownMultiplier": 4
+          },
+          "screenEmulation": {
+            "mobile": true,
+            "width": 375,
+            "height": 667,
+            "deviceScaleFactor": 2,
+            "disabled": false
+          },
+          "formFactor": "mobile"
+        }
+      },
+      "assert": {
+        "assertions": {
+          "categories:performance": ["error", {"minScore": 0.8}],
+          "categories:accessibility": ["error", {"minScore": 0.9}]
+        }
+      }
+    }
+  },
+
+  "示例3_本地开发服务器": {
+    "ci": {
+      "collect": {
+        "url": ["http://localhost:3000"],
+        "startServerCommand": "npm run start",
+        "startServerReadyPattern": "ready on",
+        "startServerReadyTimeout": 30000,
+        "numberOfRuns": 2
+      },
+      "assert": {
+        "assertions": {
+          "categories:performance": ["warn", {"minScore": 0.7}]
+        }
+      }
+    }
+  },
+
+  "示例4_静态站点": {
+    "ci": {
+      "collect": {
+        "staticDistDir": "./dist",
+        "url": [
+          "/index.html",
+          "/about.html",
+          "/contact.html"
+        ],
+        "numberOfRuns": 3
+      },
+      "assert": {
+        "preset": "lighthouse:recommended",
+        "assertions": {
+          "categories:performance": ["error", {"minScore": 0.9}],
+          "categories:seo": ["error", {"minScore": 0.9}]
+        }
+      },
+      "upload": {
+        "target": "filesystem",
+        "outputDir": "./lighthouse-reports"
+      }
+    }
+  },
+
+  "示例5_详细性能指标": {
+    "ci": {
+      "collect": {
+        "url": ["https://example.com"],
+        "numberOfRuns": 5
+      },
+      "assert": {
+        "assertions": {
+          "categories:performance": ["error", {"minScore": 0.9}],
+          "categories:accessibility": ["error", {"minScore": 0.9}],
+          "categories:best-practices": ["error", {"minScore": 0.9}],
+          "categories:seo": ["error", {"minScore": 0.9}],
+          
+          "first-contentful-paint": ["error", {"maxNumericValue": 1800}],
+          "largest-contentful-paint": ["error", {"maxNumericValue": 2500}],
+          "cumulative-layout-shift": ["error", {"maxNumericValue": 0.1}],
+          "total-blocking-time": ["error", {"maxNumericValue": 200}],
+          "speed-index": ["error", {"maxNumericValue": 3000}],
+          "interactive": ["error", {"maxNumericValue": 3500}],
+          "max-potential-fid": ["error", {"maxNumericValue": 100}],
+          
+          "uses-webp-images": "warn",
+          "uses-optimized-images": "warn",
+          "uses-text-compression": "warn",
+          "uses-responsive-images": "warn",
+          "efficient-animated-content": "warn",
+          "offscreen-images": "warn"
+        }
+      }
+    }
+  },
+
+  "示例6_使用LHCI_Server": {
+    "ci": {
+      "collect": {
+        "url": ["https://example.com"],
+        "numberOfRuns": 3
+      },
+      "assert": {
+        "preset": "lighthouse:recommended"
+      },
+      "upload": {
+        "target": "lhci",
+        "serverBaseUrl": "https://your-lhci-server.com",
+        "token": "用 process.env.LHCI_TOKEN 或实际 token"
+      }
+    }
+  },
+
+  "示例7_多页面测试": {
+    "ci": {
+      "collect": {
+        "url": [
+          "https://example.com/",
+          "https://example.com/about",
+          "https://example.com/products",
+          "https://example.com/contact",
+          "https://example.com/blog"
+        ],
+        "numberOfRuns": 3,
+        "settings": {
+          "preset": "desktop",
+          "maxWaitForLoad": 60000,
+          "chromeFlags": "--disable-gpu --no-sandbox"
+        }
+      },
+      "assert": {
+        "assertions": {
+          "categories:performance": ["warn", {"minScore": 0.8}],
+          "categories:accessibility": ["error", {"minScore": 0.9}],
+          "categories:seo": ["error", {"minScore": 0.9}]
+        }
+      },
+      "upload": {
+        "target": "temporary-public-storage"
+      }
+    }
+  },
+
+  "示例8_CI环境优化配置": {
+    "ci": {
+      "collect": {
+        "url": ["https://example.com"],
+        "numberOfRuns": 1,
+        "settings": {
+          "preset": "desktop",
+          "chromeFlags": "--headless --disable-gpu --no-sandbox",
+          "skipAudits": [
+            "uses-http2",
+            "redirects-http",
+            "uses-long-cache-ttl"
+          ]
+        }
+      },
+      "assert": {
+        "assertions": {
+          "categories:performance": ["error", {"minScore": 0.7}],
+          "categories:accessibility": ["error", {"minScore": 0.8}]
+        }
+      }
+    }
+  },
+
+  "示例9_PWA应用配置": {
+    "ci": {
+      "collect": {
+        "url": ["https://pwa-example.com"],
+        "numberOfRuns": 3,
+        "settings": {
+          "preset": "mobile"
+        }
+      },
+      "assert": {
+        "assertions": {
+          "categories:performance": ["error", {"minScore": 0.8}],
+          "categories:pwa": ["error", {"minScore": 0.8}],
+          "categories:accessibility": ["error", {"minScore": 0.9}],
+          
+          "service-worker": "error",
+          "works-offline": "warn",
+          "installable-manifest": "error",
+          "splash-screen": "warn",
+          "themed-omnibox": "warn"
+        }
+      }
+    }
+  },
+
+  "示例10_性能预算配置": {
+    "ci": {
+      "collect": {
+        "url": ["https://example.com"],
+        "numberOfRuns": 3
+      },
+      "assert": {
+        "assertions": {
+          "resource-summary:document:size": ["error", {"maxNumericValue": 15000}],
+          "resource-summary:script:size": ["error", {"maxNumericValue": 200000}],
+          "resource-summary:stylesheet:size": ["error", {"maxNumericValue": 50000}],
+          "resource-summary:image:size": ["error", {"maxNumericValue": 500000}],
+          "resource-summary:font:size": ["error", {"maxNumericValue": 100000}],
+          "resource-summary:total:size": ["error", {"maxNumericValue": 1000000}]
+        }
+      }
+    }
+  }
+}
+

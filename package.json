@@ -1,0 +1,22 @@
+{
+  "name": "lhci-test",
+  "version": "1.0.0",
+  "description": "Lighthouse CI 性能测试项目",
+  "scripts": {
+    "lhci": "lhci autorun",
+    "lhci:collect": "lhci collect",
+    "lhci:assert": "lhci assert",
+    "lhci:upload": "lhci upload"
+  },
+  "keywords": [
+    "lighthouse",
+    "ci",
+    "performance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@lhci/cli": "^0.13.0"
+  }
+}
+

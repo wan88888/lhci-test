@@ -1,6 +1,35 @@
 # Lighthouse CI 配置说明
 
-## 配置文件：lighthouserc.json
+[![Lighthouse CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/lighthouse-ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/lighthouse-ci.yml)
+
+> 自动化的网站性能监控工具，使用 Lighthouse CI 进行持续性能测试
+
+## 🚀 快速开始
+
+### 本地运行
+```bash
+# 安装依赖
+npm install
+
+# 运行 Lighthouse CI 测试
+npm run lhci
+
+# 或分步运行
+npm run lhci:collect  # 收集数据
+npm run lhci:assert   # 运行断言
+npm run lhci:upload   # 上传结果
+```
+
+### GitHub Actions 自动化
+本项目已配置 GitHub Actions 工作流，会在以下情况自动运行：
+- ✅ 推送到 main 分支
+- ✅ 创建或更新 Pull Request
+- ✅ 每天定时运行（UTC 00:00）
+- ✅ 支持手动触发
+
+查看详细配置：[.github/workflows/README.md](.github/workflows/README.md)
+
+## 📋 配置文件：lighthouserc.json
 
 ### 主要配置项说明
 
@@ -56,23 +85,17 @@ lhci upload
 lhci autorun
 ```
 
-### CI/CD 集成示例（GitHub Actions）
-```yaml
-name: Lighthouse CI
-on: [push]
-jobs:
-  lighthouse:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - run: npm install
-      - run: npm install -g @lhci/cli
-      - run: npm run build
-      - run: lhci autorun
-```
+### GitHub Actions 集成
+本项目已配置完整的 GitHub Actions 工作流！查看配置文件：
+- [lighthouse-ci.yml](.github/workflows/lighthouse-ci.yml) - 工作流配置
+- [工作流说明文档](.github/workflows/README.md) - 详细使用指南
+
+工作流功能：
+- 🔄 自动运行性能测试
+- 📊 生成详细的 Lighthouse 报告
+- 💬 在 PR 中自动添加测试结果评论
+- 📦 上传报告到 GitHub Artifacts（保留 30 天）
+- ⏰ 支持定时任务和手动触发
 
 ## 配置调整建议
 
@@ -130,8 +153,69 @@ jobs:
 | CLS | < 0.1 | 0.1 - 0.25 | > 0.25 |
 | SI | < 3.4s | 3.4s - 5.8s | > 5.8s |
 
-## 更多资源
+## 📊 查看测试结果
+
+### 在 GitHub Actions 中查看
+1. 进入 GitHub 仓库的 **Actions** 标签
+2. 选择 **Lighthouse CI** 工作流
+3. 查看最近的运行记录
+4. 下载 **lighthouse-reports** Artifact 获取详细报告
+
+### 在 Pull Request 中查看
+- 工作流会自动在 PR 中添加评论
+- 评论包含性能测试摘要和报告链接
+
+## 📁 项目结构
+```
+lhci-test/
+├── .github/
+│   └── workflows/
+│       ├── lighthouse-ci.yml      # GitHub Actions 工作流
+│       └── README.md              # 工作流说明文档
+├── lighthouserc.json              # Lighthouse CI 主配置文件
+├── package.json                   # Node.js 项目配置
+└── README.md                      # 项目说明文档
+```
+
+## 🔧 常见问题
+
+### 如何修改测试的 URL？
+编辑 `lighthouserc.json` 中的 `collect.url` 数组：
+```json
+{
+  "collect": {
+    "url": [
+      "https://your-website.com",
+      "https://your-website.com/about"
+    ]
+  }
+}
+```
+
+### 如何调整性能阈值？
+编辑 `lighthouserc.json` 中的 `assert.assertions`：
+```json
+{
+  "assert": {
+    "assertions": {
+      "categories:performance": ["error", {"minScore": 0.9}]
+    }
+  }
+}
+```
+
+### 如何修改定时任务时间？
+编辑 `.github/workflows/lighthouse-ci.yml` 中的 `schedule.cron`：
+```yaml
+schedule:
+  - cron: '0 0 * * *'  # 每天 UTC 00:00
+```
+
+## 🌟 更多资源
 - [Lighthouse CI 官方文档](https://github.com/GoogleChrome/lighthouse-ci)
 - [Lighthouse 评分指南](https://web.dev/performance-scoring/)
 - [Web Vitals](https://web.dev/vitals/)
+- [GitHub Actions 文档](https://docs.github.com/en/actions)
 
+## 📝 License
+MIT
