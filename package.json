@@ -1,22 +1,34 @@
 {
   "name": "lhci-test",
   "version": "1.0.0",
-  "description": "Lighthouse CI 性能测试项目",
+  "description": "Lighthouse CI 性能测试项目 - 自动化网站性能监控，支持 LHCI Server 和飞书通知",
   "scripts": {
     "lhci": "lhci autorun",
     "lhci:collect": "lhci collect",
     "lhci:assert": "lhci assert",
     "lhci:upload": "lhci upload"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/lhci-test.git"
+  },
   "keywords": [
     "lighthouse",
+    "lighthouse-ci",
     "ci",
-    "performance"
+    "performance",
+    "web-performance",
+    "monitoring",
+    "feishu",
+    "github-actions"
   ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "@lhci/cli": "^0.13.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
 

@@ -5,6 +5,9 @@ on:
     branches:
       - main
   pull_request:
+  schedule:
+    - cron: '0 16 * * 3'  # 每周三 UTC 16:00 (北京时间周四 00:00) 运行
+  workflow_dispatch:      # 支持手动触发
 
 jobs:
   lhci:
@@ -45,6 +48,9 @@ jobs:
           COMMIT_AUTHOR=$(git log -1 --pretty=%an)
           COMMIT_HASH=$(git rev-parse --short HEAD)
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          
+          # 拼接 Dashboard URL
+          DASHBOARD_URL="${{ secrets.LHCI_SERVER_BASE_URL }}/app/projects/lhci-test/dashboard"
           
           # 判断测试状态
           if [ "${{ job.status }}" == "success" ]; then
@@ -89,7 +95,7 @@ jobs:
                           "content": "📊 查看详细报告"
                         },
                         "type": "primary",
-                        "url": "https://lhci-server-production-1774.up.railway.app/app/projects/lhci-test/dashboard"
+                        "url": "'"$DASHBOARD_URL"'"
                       },
                       {
                         "tag": "button",

@@ -1,8 +1,16 @@
-# Lighthouse CI 配置说明
+# Lighthouse CI 性能监控项目
 
 [![Lighthouse CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/lighthouse-ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/lighthouse-ci.yml)
 
-> 自动化的网站性能监控工具，使用 Lighthouse CI 进行持续性能测试
+> 自动化的网站性能监控工具，使用 Lighthouse CI 进行持续性能测试，支持 LHCI Server 报告存储和飞书实时通知
+
+## ✨ 特性
+
+- 🚀 **自动化测试** - GitHub Actions 自动运行性能测试
+- 📊 **LHCI Server** - 历史报告存储和趋势分析
+- 📱 **飞书通知** - 测试完成后自动发送飞书消息
+- 🎯 **性能断言** - 自定义性能阈值，不达标自动失败
+- 📈 **持续监控** - 支持定时任务和 PR 触发
 
 ## 🚀 快速开始
 
@@ -24,10 +32,10 @@ npm run lhci:upload   # 上传结果
 本项目已配置 GitHub Actions 工作流，会在以下情况自动运行：
 - ✅ 推送到 main 分支
 - ✅ 创建或更新 Pull Request
-- ✅ 每天定时运行（UTC 00:00）
-- ✅ 支持手动触发
+- 📱 自动发送飞书通知
+- 📊 上传报告到 LHCI Server
 
-查看详细配置：[.github/workflows/README.md](.github/workflows/README.md)
+查看工作流配置：[.github/workflows/lighthouse-ci.yml](.github/workflows/lighthouse-ci.yml)
 
 ## 📋 配置文件：lighthouserc.json
 
@@ -86,16 +94,16 @@ lhci autorun
 ```
 
 ### GitHub Actions 集成
-本项目已配置完整的 GitHub Actions 工作流！查看配置文件：
-- [lighthouse-ci.yml](.github/workflows/lighthouse-ci.yml) - 工作流配置
-- [工作流说明文档](.github/workflows/README.md) - 详细使用指南
+本项目已配置完整的 GitHub Actions 工作流！
 
-工作流功能：
+**工作流功能：**
 - 🔄 自动运行性能测试
-- 📊 生成详细的 Lighthouse 报告
-- 💬 在 PR 中自动添加测试结果评论
-- 📦 上传报告到 GitHub Artifacts（保留 30 天）
-- ⏰ 支持定时任务和手动触发
+- 📊 上传报告到 LHCI Server
+- 📱 发送飞书通知
+- 🎯 性能断言检查
+- ⚡ 支持 PR 和 push 触发
+
+**查看配置**: [.github/workflows/lighthouse-ci.yml](.github/workflows/lighthouse-ci.yml)
 
 ## 配置调整建议
 
@@ -134,14 +142,18 @@ lhci autorun
 ```
 
 ### 使用 LHCI Server
-如果搭建了自己的 LHCI Server：
+本项目已配置 LHCI Server 上传：
 ```json
 "upload": {
-  "target": "lhci",
-  "serverBaseUrl": "https://your-lhci-server.com",
-  "token": "your-build-token"
+  "target": "lhci"
 }
 ```
+
+通过环境变量配置：
+- `LHCI_SERVER_BASE_URL` - LHCI Server 基础地址
+- `LHCI_TOKEN` - Build Token
+
+Dashboard URL 会自动拼接为：`${LHCI_SERVER_BASE_URL}/app/projects/lhci-test/dashboard`
 
 ## 性能指标阈值参考
 
@@ -155,27 +167,66 @@ lhci autorun
 
 ## 📊 查看测试结果
 
-### 在 GitHub Actions 中查看
+### 1. LHCI Server（推荐）
+访问你的 LHCI Server Dashboard 查看详细报告和历史趋势：
+- 查看历史测试记录
+- 对比性能变化趋势
+- 分析各项指标详情
+- Dashboard 地址在 GitHub Secrets 中配置
+
+### 2. 飞书通知
+每次测试完成后，会自动发送飞书消息通知：
+- ✅ 测试状态（通过/失败）
+- 📊 快速查看报告按钮
+- 🔗 跳转到 GitHub Actions 详情
+- 💻 包含提交信息和作者
+
+### 3. GitHub Actions
 1. 进入 GitHub 仓库的 **Actions** 标签
 2. 选择 **Lighthouse CI** 工作流
 3. 查看最近的运行记录
-4. 下载 **lighthouse-reports** Artifact 获取详细报告
-
-### 在 Pull Request 中查看
-- 工作流会自动在 PR 中添加评论
-- 评论包含性能测试摘要和报告链接
+4. 查看详细日志
 
 ## 📁 项目结构
 ```
 lhci-test/
 ├── .github/
 │   └── workflows/
-│       ├── lighthouse-ci.yml      # GitHub Actions 工作流
-│       └── README.md              # 工作流说明文档
+│       └── lighthouse-ci.yml      # GitHub Actions 工作流
 ├── lighthouserc.json              # Lighthouse CI 主配置文件
+├── lighthouserc.examples.json     # 配置示例参考
 ├── package.json                   # Node.js 项目配置
+├── .gitignore                     # Git 忽略文件
 └── README.md                      # 项目说明文档
 ```
+
+## 🔐 环境变量配置
+
+需要在 GitHub Settings → Secrets and variables → Actions 中配置以下 Secrets：
+
+| Secret 名称 | 说明 | 必需 |
+|------------|------|------|
+| `LHCI_SERVER_BASE_URL` | LHCI Server 地址 | ✅ 是 |
+| `LHCI_TOKEN` | LHCI Build Token | ✅ 是 |
+| `FEISHU_WEBHOOK` | 飞书机器人 Webhook 地址 | ✅ 是 |
+
+### 配置步骤
+
+#### 1. 配置 LHCI Server
+- `LHCI_SERVER_BASE_URL`: 你的 LHCI Server 地址（例如：`https://your-lhci-server.com`）
+- `LHCI_TOKEN`: 从 LHCI Server 项目设置中获取
+
+**注意**：Dashboard URL 会自动拼接为 `${LHCI_SERVER_BASE_URL}/app/projects/lhci-test/dashboard`
+
+#### 2. 配置飞书机器人
+1. 打开飞书群聊 → 设置 → 群机器人
+2. 添加自定义机器人，命名为 "Lighthouse CI"
+3. 复制 Webhook 地址
+4. 添加到 GitHub Secrets 中
+
+#### 3. GITHUB_TOKEN
+- 自动提供，无需手动配置
+- 已在工作流中配置权限：`contents: read`, `pull-requests: write`, `statuses: write`
 
 ## 🔧 常见问题
 
@@ -204,11 +255,35 @@ lhci-test/
 }
 ```
 
-### 如何修改定时任务时间？
-编辑 `.github/workflows/lighthouse-ci.yml` 中的 `schedule.cron`：
+### 如何添加定时任务？
+在 `.github/workflows/lighthouse-ci.yml` 的 `on:` 部分添加：
 ```yaml
-schedule:
-  - cron: '0 0 * * *'  # 每天 UTC 00:00
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '0 16 * * 3'  # 每周三 UTC 16:00 (北京时间周四 00:00)
+  workflow_dispatch:      # 支持手动触发
+```
+
+### 如何查看飞书通知？
+每次测试完成后，飞书会收到包含以下信息的消息卡片：
+- 测试状态（通过/失败，绿色/红色卡片）
+- 分支名称和提交信息
+- 两个按钮：查看详细报告、查看 Actions
+
+### 测试 URL 在哪里配置？
+当前配置的测试 URL: `https://esimnum.com/home`
+
+修改 `lighthouserc.json` 中的 `collect.url`：
+```json
+{
+  "collect": {
+    "url": ["https://your-website.com"]
+  }
+}
 ```
 
 ## 🌟 更多资源
