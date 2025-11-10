@@ -38,16 +38,45 @@ jobs:
           LHCI_TOKEN: ${{ secrets.LHCI_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 为定时任务创建唯一的构建标识
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            # 定时任务：使用时间戳作为唯一标识
+            BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            BUILD_HASH="scheduled-$(date -u +%Y%m%d-%H%M%S)"
+            
+            # 设置自定义的构建上下文
+            export LHCI_BUILD_CONTEXT__CURRENT_HASH="$BUILD_HASH"
+            export LHCI_BUILD_CONTEXT__COMMIT_MESSAGE="定时任务 - $BUILD_TIME"
+            export LHCI_BUILD_CONTEXT__COMMIT_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            export LHCI_BUILD_CONTEXT__AUTHOR="GitHub Actions (Scheduled)"
+            
+            echo "🕐 定时任务构建"
+            echo "📦 Build Hash: $BUILD_HASH"
+            echo "⏰ Build Time: $BUILD_TIME"
+          else
+            echo "📝 代码提交触发的构建"
+          fi
+          
           lhci autorun --config=lighthouserc.json
 
       - name: Send Feishu Notification
         if: always()
         run: |
-          # 获取 commit 信息
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          COMMIT_AUTHOR=$(git log -1 --pretty=%an)
-          COMMIT_HASH=$(git rev-parse --short HEAD)
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          # 获取构建信息
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            # 定时任务
+            BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            COMMIT_MSG="定时任务 - $BUILD_TIME"
+            COMMIT_AUTHOR="GitHub Actions (Scheduled)"
+            COMMIT_HASH="scheduled-$(date -u +%Y%m%d-%H%M%S)"
+            BRANCH_NAME="scheduled"
+          else
+            # 正常提交
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            COMMIT_AUTHOR=$(git log -1 --pretty=%an)
+            COMMIT_HASH=$(git rev-parse --short HEAD)
+            BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          fi
           
           # 拼接 Dashboard URL
           DASHBOARD_URL="${{ secrets.LHCI_SERVER_BASE_URL }}/app/projects/lhci-test/dashboard"
@@ -70,7 +99,7 @@ jobs:
                 "header": {
                   "title": {
                     "tag": "plain_text",
-                    "content": "🚀 Lighthouse CI 测试报告"
+                    "content": "🚀 eSIM Lighthouse版本对比报告"
                   },
                   "template": "'"$STATUS_COLOR"'"
                 },
