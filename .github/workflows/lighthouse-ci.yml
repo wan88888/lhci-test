@@ -6,8 +6,8 @@ on:
       - main
   pull_request:
   schedule:
-    - cron: '0 16 * * 3'  # 每周三 UTC 16:00 (北京时间周四 00:00) 运行
-  workflow_dispatch:      # 支持手动触发
+    - cron: '0 * * * *'  # 每小时运行一次（用于测试）
+  workflow_dispatch:     # 支持手动触发
 
 jobs:
   lhci:
@@ -44,17 +44,26 @@ jobs:
             BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
             BUILD_HASH="scheduled-$(date -u +%Y%m%d-%H%M%S)"
             
-            # 设置自定义的构建上下文
+            # 设置完整的构建上下文（覆盖所有 Git 信息）
             export LHCI_BUILD_CONTEXT__CURRENT_HASH="$BUILD_HASH"
-            export LHCI_BUILD_CONTEXT__COMMIT_MESSAGE="定时任务 - $BUILD_TIME"
+            export LHCI_BUILD_CONTEXT__COMMIT_MESSAGE="⏰ 定时任务 - $BUILD_TIME"
             export LHCI_BUILD_CONTEXT__COMMIT_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             export LHCI_BUILD_CONTEXT__AUTHOR="GitHub Actions (Scheduled)"
+            export LHCI_BUILD_CONTEXT__CURRENT_BRANCH="main"
+            export LHCI_BUILD_CONTEXT__AVATAR_URL="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            export LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            
+            # 禁用自动 Git 检测
+            export LHCI_BUILD_CONTEXT__GIT_REMOTE=""
+            export LHCI_BUILD_CONTEXT__GITHUB_REPO_SLUG="${{ github.repository }}"
             
             echo "🕐 定时任务构建"
             echo "📦 Build Hash: $BUILD_HASH"
             echo "⏰ Build Time: $BUILD_TIME"
+            echo "🌿 Branch: main"
           else
             echo "📝 代码提交触发的构建"
+            echo "🌿 Branch: ${GITHUB_REF#refs/heads/}"
           fi
           
           lhci autorun --config=lighthouserc.json
@@ -66,10 +75,10 @@ jobs:
           if [ "${{ github.event_name }}" == "schedule" ]; then
             # 定时任务
             BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-            COMMIT_MSG="定时任务 - $BUILD_TIME"
+            COMMIT_MSG="⏰ 定时任务 - $BUILD_TIME"
             COMMIT_AUTHOR="GitHub Actions (Scheduled)"
             COMMIT_HASH="scheduled-$(date -u +%Y%m%d-%H%M%S)"
-            BRANCH_NAME="scheduled"
+            BRANCH_NAME="main"
           else
             # 正常提交
             COMMIT_MSG=$(git log -1 --pretty=%B)
